@@ -1,6 +1,12 @@
-const { temp_image, package_trip, payment, cart_item, user } = require("../../models");
+const {
+  temp_image,
+  package_trip,
+  payment,
+  cart_item,
+  user,
+} = require("../../models");
 const midtransClient = require("midtrans-client");
-const Op = require("Sequelize").Op;
+const Op = require("sequelize").Op;
 
 let core = new midtransClient.CoreApi({
   isProduction: false,
@@ -24,7 +30,9 @@ class UserPaymentController {
         });
         for (let i in dataCarts) {
           const package_tripId = dataCarts[i].package_tripId;
-          const dataPack = await package_trip.findOne({ where: { id: package_tripId } });
+          const dataPack = await package_trip.findOne({
+            where: { id: package_tripId },
+          });
           const images = await temp_image.findAll({
             attributes: ["id", "package_tripId", "img"],
             where: { package_tripId },
@@ -61,7 +69,9 @@ class UserPaymentController {
         let isBooked = false;
         today.setHours(0, 0, 0, 0);
         if (varDate >= today) {
-          const valCart = await cart_item.findAll({ where: { date, package_tripId } });
+          const valCart = await cart_item.findAll({
+            where: { date, package_tripId },
+          });
           for (let i in valCart) {
             let paymentId = valCart[i].paymentId;
             const valP = await payment.findOne({ where: { id: paymentId } });
@@ -71,49 +81,89 @@ class UserPaymentController {
             }
           }
           if (isBooked) {
-            res.status(203).json({ msg: "This package trip already booked by someone, choose another date!" });
+            res.status(203).json({
+              msg: "This package trip already booked by someone, choose another date!",
+            });
           } else {
-            const valPackage = await package_trip.findOne({ where: { id: package_tripId } });
+            const valPackage = await package_trip.findOne({
+              where: { id: package_tripId },
+            });
             if (valPackage) {
-              const valPaym = await payment.findOne({ where: { userId, status: "oncart" } });
+              const valPaym = await payment.findOne({
+                where: { userId, status: "oncart" },
+              });
               const price = +valPackage.price;
               if (valPaym) {
-                const valSameData = await cart_item.findOne({ where: { date, package_tripId, paymentId: valPaym.id } });
+                const valSameData = await cart_item.findOne({
+                  where: { date, package_tripId, paymentId: valPaym.id },
+                });
                 if (valSameData) {
                   const newAmount = +valSameData.amount + +amount;
                   if (newAmount > 8) {
                     res.status(203).json({ msg: "Max member has reach out!" });
                   } else {
-                    await cart_item.update({ amount: newAmount }, { where: { id: valSameData.id } });
-                    const result = await cart_item.findOne({ where: { id: valSameData.id } });
+                    await cart_item.update(
+                      { amount: newAmount },
+                      { where: { id: valSameData.id } }
+                    );
+                    const result = await cart_item.findOne({
+                      where: { id: valSameData.id },
+                    });
                     let balance = 0;
-                    const dataTotal = await cart_item.findAll({ where: { paymentId: +valPaym.id } });
+                    const dataTotal = await cart_item.findAll({
+                      where: { paymentId: +valPaym.id },
+                    });
                     for (let i in dataTotal) {
                       const id = +dataTotal[i].package_tripId;
-                      const { price } = await package_trip.findOne({ where: { id } });
+                      const { price } = await package_trip.findOne({
+                        where: { id },
+                      });
                       let jumlah = price * +dataTotal[i].amount;
                       balance += jumlah;
                     }
-                    await payment.update({ total: balance }, { where: { id: valPaym.id } });
+                    await payment.update(
+                      { total: balance },
+                      { where: { id: valPaym.id } }
+                    );
                     res.status(201).json(result);
                   }
                 } else {
-                  const addCart = await cart_item.create({ paymentId: valPaym.id, date, package_tripId, amount });
+                  const addCart = await cart_item.create({
+                    paymentId: valPaym.id,
+                    date,
+                    package_tripId,
+                    amount,
+                  });
                   let balance = 0;
-                  const dataTotal = await cart_item.findAll({ where: { paymentId: valPaym.id } });
+                  const dataTotal = await cart_item.findAll({
+                    where: { paymentId: valPaym.id },
+                  });
                   for (let i in dataTotal) {
                     const id = dataTotal[i].package_tripId;
-                    const { price } = await package_trip.findOne({ where: { id } });
+                    const { price } = await package_trip.findOne({
+                      where: { id },
+                    });
                     let jumlah = price * dataTotal[i].amount;
                     balance += jumlah;
                   }
-                  await payment.update({ total: balance }, { where: { id: valPaym.id } });
+                  await payment.update(
+                    { total: balance },
+                    { where: { id: valPaym.id } }
+                  );
                   res.status(201).json(addCart);
                 }
               } else {
-                const newPay = await payment.create({ userId, status: "oncart" });
+                const newPay = await payment.create({
+                  userId,
+                  status: "oncart",
+                });
                 const paymentId = newPay.id;
-                const addCart = await cart_item.create({ paymentId, date, package_tripId, amount });
+                const addCart = await cart_item.create({
+                  paymentId,
+                  date,
+                  package_tripId,
+                  amount,
+                });
                 const total = price * +addCart.amount;
                 await payment.update({ total }, { where: { id: newPay.id } });
                 res.status(201).json(addCart);
@@ -136,10 +186,17 @@ class UserPaymentController {
       const userId = req.user.id;
       const { id } = req.body;
       //tambah validasi payment code : nanti
-      const payment_code = (Math.random() + 1).toString(36).substring(2).toUpperCase();
-      const valPaym = await payment.findOne({ where: { userId, status: "oncart" } });
+      const payment_code = (Math.random() + 1)
+        .toString(36)
+        .substring(2)
+        .toUpperCase();
+      const valPaym = await payment.findOne({
+        where: { userId, status: "oncart" },
+      });
       if (valPaym) {
-        const validasiCart = await cart_item.findAll({ where: { id, paymentId: valPaym.id } });
+        const validasiCart = await cart_item.findAll({
+          where: { id, paymentId: valPaym.id },
+        });
         let isValidDate = true;
         let today = new Date();
         for (let j in validasiCart) {
@@ -151,7 +208,9 @@ class UserPaymentController {
           }
         }
         if (isValidDate) {
-          const listCarts = await cart_item.findAll({ where: { paymentId: valPaym.id } });
+          const listCarts = await cart_item.findAll({
+            where: { paymentId: valPaym.id },
+          });
           const arrCarts = [];
           listCarts.forEach((list) => {
             return arrCarts.push(list.id);
@@ -171,27 +230,46 @@ class UserPaymentController {
             }
           }
           if (valCart) {
-            const newPayment = await payment.create({ userId, payment_code, status: "unpaid" });
-            await cart_item.update({ paymentId: newPayment.id }, { where: { id } });
+            const newPayment = await payment.create({
+              userId,
+              payment_code,
+              status: "unpaid",
+            });
+            await cart_item.update(
+              { paymentId: newPayment.id },
+              { where: { id } }
+            );
             let balance = 0;
-            const dataTotal = await cart_item.findAll({ where: { paymentId: valPaym.id } });
+            const dataTotal = await cart_item.findAll({
+              where: { paymentId: valPaym.id },
+            });
             for (let i in dataTotal) {
               const id = dataTotal[i].package_tripId;
               const { price } = await package_trip.findOne({ where: { id } });
               let jumlah = price * dataTotal[i].amount;
               balance += jumlah;
             }
-            await payment.update({ total: balance }, { where: { id: valPaym.id } });
+            await payment.update(
+              { total: balance },
+              { where: { id: valPaym.id } }
+            );
             let totalUnpaid = 0;
-            const dataTotalUnpaid = await cart_item.findAll({ where: { paymentId: newPayment.id } });
+            const dataTotalUnpaid = await cart_item.findAll({
+              where: { paymentId: newPayment.id },
+            });
             for (let i in dataTotalUnpaid) {
               const id = dataTotalUnpaid[i].package_tripId;
               const { price } = await package_trip.findOne({ where: { id } });
               let jumlah = price * dataTotalUnpaid[i].amount;
               totalUnpaid += jumlah;
             }
-            await payment.update({ total: totalUnpaid }, { where: { id: newPayment.id } });
-            const dataCarts = await cart_item.findAll({ where: { paymentId: newPayment.id } });
+            await payment.update(
+              { total: totalUnpaid },
+              { where: { id: newPayment.id } }
+            );
+            const dataCarts = await cart_item.findAll({
+              where: { paymentId: newPayment.id },
+            });
             res.json(dataCarts);
           } else {
             res.status(404).json({ msg: "Id cart_item isnt match!" });
@@ -224,7 +302,9 @@ class UserPaymentController {
           let temp = [];
           for (let i in dataCarts) {
             const package_tripId = dataCarts[i].package_tripId;
-            const dataPack = await package_trip.findOne({ where: { id: package_tripId } });
+            const dataPack = await package_trip.findOne({
+              where: { id: package_tripId },
+            });
             const images = await temp_image.findAll({
               attributes: ["id", "package_tripId", "img"],
               where: { package_tripId },
@@ -265,7 +345,9 @@ class UserPaymentController {
           let temp = [];
           for (let i in dataCarts) {
             const package_tripId = dataCarts[i].package_tripId;
-            const dataPack = await package_trip.findOne({ where: { id: package_tripId } });
+            const dataPack = await package_trip.findOne({
+              where: { id: package_tripId },
+            });
             const images = await temp_image.findAll({
               attributes: ["id", "package_tripId", "img"],
               where: { package_tripId },
@@ -293,9 +375,13 @@ class UserPaymentController {
     try {
       const id = +req.params.id;
       const userId = req.user.id;
-      const result = await payment.destroy({ where: { id, userId, status: "unpaid" } });
+      const result = await payment.destroy({
+        where: { id, userId, status: "unpaid" },
+      });
       if (result !== 0) {
-        res.status(200).json({ message: `Payment with id ${id} has been deleted` });
+        res
+          .status(200)
+          .json({ message: `Payment with id ${id} has been deleted` });
       } else {
         res.status(404).json({ message: `Payment not found!` });
       }
@@ -310,19 +396,28 @@ class UserPaymentController {
       const userId = req.user.id;
       const valCart = await cart_item.findOne({ where: { id } });
       if (valCart) {
-        const valPayment = await payment.findOne({ where: { id: valCart.paymentId, userId, status: "oncart" } });
+        const valPayment = await payment.findOne({
+          where: { id: valCart.paymentId, userId, status: "oncart" },
+        });
         if (valPayment) {
           await cart_item.destroy({ where: { id } });
           let balance = 0;
-          const dataTotal = await cart_item.findAll({ where: { paymentId: +valPayment.id } });
+          const dataTotal = await cart_item.findAll({
+            where: { paymentId: +valPayment.id },
+          });
           for (let i in dataTotal) {
             const id = +dataTotal[i].package_tripId;
             const { price } = await package_trip.findOne({ where: { id } });
             let jumlah = price * +dataTotal[i].amount;
             balance += jumlah;
           }
-          await payment.update({ total: balance }, { where: { id: valPayment.id } });
-          res.status(200).json({ message: `Cart item with id ${id} has been deleted!` });
+          await payment.update(
+            { total: balance },
+            { where: { id: valPayment.id } }
+          );
+          res
+            .status(200)
+            .json({ message: `Cart item with id ${id} has been deleted!` });
         } else {
           res.status(404).json({ message: `Data invalid!` });
         }
@@ -339,12 +434,18 @@ class UserPaymentController {
       const id = +req.params.id;
       const userId = req.user.id;
       let isBooked = false;
-      const cekPayment = await payment.findOne({ where: { id, userId, status: "unpaid" } });
+      const cekPayment = await payment.findOne({
+        where: { id, userId, status: "unpaid" },
+      });
       if (cekPayment) {
-        const valPayment = await cart_item.findAll({ where: { paymentId: id } });
+        const valPayment = await cart_item.findAll({
+          where: { paymentId: id },
+        });
         for (let a in valPayment) {
           const { date, package_tripId } = valPayment[a];
-          const valCart = await cart_item.findAll({ where: { date, package_tripId } });
+          const valCart = await cart_item.findAll({
+            where: { date, package_tripId },
+          });
           for (let i in valCart) {
             let paymentId = valCart[i].paymentId;
             const valP = await payment.findOne({ where: { id: paymentId } });
@@ -355,9 +456,14 @@ class UserPaymentController {
           }
         }
         if (isBooked) {
-          res.status(203).json({ msg: "This package trip already booked by someone, choose another date!" });
+          res.status(203).json({
+            msg: "This package trip already booked by someone, choose another date!",
+          });
         } else {
-          const result = await payment.update({ status: "paid" }, { where: { id, userId, status: "unpaid" } });
+          const result = await payment.update(
+            { status: "paid" },
+            { where: { id, userId, status: "unpaid" } }
+          );
           if (result[0] !== 0) {
             res.status(200).json({ message: `Payment successfully!` });
           } else {
@@ -377,7 +483,9 @@ class UserPaymentController {
       // TODO tambah validasi
       const id = +req.params.id;
       const userId = +req.user.id;
-      const { payment_code, total } = await payment.findOne({ where: { id, userId } });
+      const { payment_code, total } = await payment.findOne({
+        where: { id, userId },
+      });
       const { payment_type, bank } = req.body;
 
       const payload = {
@@ -396,8 +504,13 @@ class UserPaymentController {
         const resPayment = await core.charge(payload);
         const status = resPayment.transaction_status;
         const responseMidtrans = JSON.stringify(resPayment);
-        const result = await payment.update({ status, responseMidtrans }, { where: { id, userId } });
-        result[0] === 1 ? res.status(200).json(`Payment Updated!`) : res.status(404).json(`Payment not updated!`);
+        const result = await payment.update(
+          { status, responseMidtrans },
+          { where: { id, userId } }
+        );
+        result[0] === 1
+          ? res.status(200).json(`Payment Updated!`)
+          : res.status(404).json(`Payment not updated!`);
       } else {
         res.status(404).json({ msg: "Data payment is not found!" });
       }
@@ -411,9 +524,14 @@ class UserPaymentController {
       const notif = await core.transaction.notification(notificationJson);
       const code = notif.order_id;
       let status = "";
-      notif.transaction_status === "settlement" ? (status = "paid") : (status = notif.transaction_status);
+      notif.transaction_status === "settlement"
+        ? (status = "paid")
+        : (status = notif.transaction_status);
       const responseMidtrans = JSON.stringify(notif);
-      await payment.update({ status, responseMidtrans }, { where: { payment_code: code } });
+      await payment.update(
+        { status, responseMidtrans },
+        { where: { payment_code: code } }
+      );
 
       res.status(200).json(result);
     } catch (error) {
@@ -427,9 +545,14 @@ class UserPaymentController {
       const userId = +req.user.id;
       const result = await core.transaction.status(code);
       let status = "";
-      result.transaction_status === "settlement" ? (status = "paid") : (status = result.transaction_status);
+      result.transaction_status === "settlement"
+        ? (status = "paid")
+        : (status = result.transaction_status);
       const responseMidtrans = JSON.stringify(result);
-      await payment.update({ status, responseMidtrans }, { where: { payment_code: code, userId } });
+      await payment.update(
+        { status, responseMidtrans },
+        { where: { payment_code: code, userId } }
+      );
 
       if (status === "paid") {
         res.status(200).json(result);
@@ -446,12 +569,23 @@ class UserPaymentController {
       const id = +req.params.id;
       const userId = +req.user.id;
       let result = {};
-      const dataPayment = await payment.findOne({ where: { id, userId, status: "pending" } });
+      const dataPayment = await payment.findOne({
+        where: { id, userId, status: "pending" },
+      });
       const { payment_code, total, status } = dataPayment;
       const responseMidtrans = JSON.parse(dataPayment.responseMidtrans);
       const { va_numbers, payment_type } = responseMidtrans;
       const { bank, va_number } = va_numbers[0];
-      result = { id, userId, payment_code, total, payment_type, bank, va_number, status };
+      result = {
+        id,
+        userId,
+        payment_code,
+        total,
+        payment_type,
+        bank,
+        va_number,
+        status,
+      };
       res.status(200).json(result);
     } catch (error) {
       res.status(500).json(error);
