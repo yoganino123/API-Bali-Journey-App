@@ -1,10 +1,16 @@
 {
   "development": {
-    "username": "postgres",
-    "password": "admin",
-    "database": "db_bali_journey_apps",
-    "host": "127.0.0.1",
-    "dialect": "postgres"
+    "username": "adtsibjjiiqfhq",
+    "password": "7e7f0c69c7a92ad9678bdbaa40310d461419a5cb8f42748fc53d7a3628630c71",
+    "database": "d15dvgsh9a1s3b",
+    "host": "ec2-54-86-106-48.compute-1.amazonaws.com",
+    "dialect": "postgres",
+    "dialectOptions": {
+      "ssl": {
+          "require": true,
+          "rejectUnauthorized": false
+      }
+  }
   },
   "test": {
     "username": "root",
@@ -14,10 +20,16 @@
     "dialect": "mysql"
   },
   "production": {
-    "username": "root",
-    "password": null,
-    "database": "database_production",
-    "host": "127.0.0.1",
-    "dialect": "mysql"
+    "username": "adtsibjjiiqfhq",
+    "password": "7e7f0c69c7a92ad9678bdbaa40310d461419a5cb8f42748fc53d7a3628630c71",
+    "database": "d15dvgsh9a1s3b",
+    "host": "ec2-54-86-106-48.compute-1.amazonaws.com",
+    "dialect": "postgres",
+    "dialectOptions": {
+      "ssl": {
+          "require": true,
+          "rejectUnauthorized": false
+      }
+  }
   }
 }
