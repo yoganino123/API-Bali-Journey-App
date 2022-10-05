@@ -29,8 +29,14 @@ module.exports = (sequelize, DataTypes) => {
       payment_code: DataTypes.STRING,
       total: DataTypes.BIGINT,
       status: DataTypes.STRING,
+      responseMidtrans: DataTypes.TEXT,
     },
     {
+      hooks: {
+        beforeCreate: (payment, options) => {
+          payment.responseMidtrans = null;
+        },
+      },
       sequelize,
       modelName: "payment",
     }

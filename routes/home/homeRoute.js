@@ -1,5 +1,5 @@
 const homeRoute = require("express").Router();
-const { HomeController } = require("../../controllers");
+const { HomeController, UserPaymentController } = require("../../controllers");
 
 homeRoute.get("/", HomeController.home);
 homeRoute.post("/login", HomeController.login);
@@ -15,5 +15,8 @@ homeRoute.get("/destination/:id", HomeController.destinationId);
 homeRoute.get("/packageTrip/:id", HomeController.packageTripId);
 // homeRoute.get("/reviewDestination/:id", HomeController.reviewDestinationId);
 // homeRoute.get("/reviewPackageTrip/:id", HomeController.reviewPackageTripId);
+
+// ? rute update respon otomatis dari midtrans
+homeRoute.get("/notification", UserPaymentController.notification);
 
 module.exports = homeRoute;
