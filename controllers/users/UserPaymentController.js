@@ -521,7 +521,7 @@ class UserPaymentController {
 
   static async notification(req, res) {
     try {
-      const notif = await core.transaction.notification(notificationJson);
+      const notif = await core.transaction.notification(req.body);
       const code = notif.order_id;
       let status = "";
       notif.transaction_status === "settlement"
