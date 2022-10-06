@@ -46,6 +46,7 @@ class ReportController {
           transaction_time,
           name_user: users.name,
           user_email: users.email,
+          user_images: users.images,
           cart_items: temp,
         });
       }
@@ -109,6 +110,7 @@ class ReportController {
           trc_time,
           name_user: users.name,
           user_email: users.email,
+          user_images: users.images,
           cart_items: temp,
         });
       }
