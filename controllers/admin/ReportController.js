@@ -1,5 +1,5 @@
 const { payment, user, temp_image, cart_item, package_trip } = require("../../models");
-
+const Op = require("sequelize").Op;
 class ReportController {
   static async getAllPaids(req, res) {
     try {
@@ -9,7 +9,10 @@ class ReportController {
         where: { status: "paid" },
       });
       for (let i in payments) {
-        let userId = payments[i].userId;
+        let { userId, payment_code, total, status, responseMidtrans } = payments[i];
+        const { va_numbers, transaction_time, payment_type } = JSON.parse(responseMidtrans);
+        const bank = va_numbers[0].bank;
+
         let dataUser = await user.findOne({
           attributes: { exclude: ["createdAt", "updatedAt", "password", "level"] },
           where: { id: userId },
@@ -25,19 +28,26 @@ class ReportController {
         for (let i in dataCarts) {
           const package_tripId = dataCarts[i].package_tripId;
           const dataPack = await package_trip.findOne({ where: { id: package_tripId } });
-          const images = await temp_image.findAll({
-            attributes: ["id", "package_tripId", "img"],
-            where: { package_tripId },
-          });
           temp.push({
             ...dataCarts[i].dataValues,
             name: dataPack.name,
             price: dataPack.price,
             rating: dataPack.rating,
-            images,
           });
         }
-        result.push({ ...payments[i].dataValues, users, cart_items: temp });
+        result.push({
+          id: payments[i].id,
+          userId,
+          payment_code,
+          total,
+          status,
+          payment_type,
+          bank,
+          transaction_time,
+          name_user: users.name,
+          user_email: users.email,
+          cart_items: temp,
+        });
       }
 
       res.status(200).json(result);
@@ -45,15 +55,27 @@ class ReportController {
       res.status(500).json(err);
     }
   }
-  static async getAllUnpaids(req, res) {
+  static async getAllPayments(req, res) {
     try {
       let result = [];
       const payments = await payment.findAll({
         attributes: { exclude: ["createdAt", "updatedAt"] },
-        where: { status: "unpaid" },
+        where: { status: { [Op.or]: ["pending", "unpaid", "paid"] } },
       });
       for (let i in payments) {
-        let userId = payments[i].userId;
+        let pym_type, trc_time, type_bank;
+        let { userId, payment_code, total, status, responseMidtrans } = payments[i];
+        if (status === "unpaid") {
+          pym_type = "none";
+          trc_time = "none";
+          type_bank = "none";
+        } else {
+          const { va_numbers, transaction_time, payment_type } = JSON.parse(responseMidtrans);
+          pym_type = payment_type;
+          trc_time = transaction_time;
+          type_bank = va_numbers[0].bank;
+        }
+
         let dataUser = await user.findOne({
           attributes: { exclude: ["createdAt", "updatedAt", "password", "level"] },
           where: { id: userId },
@@ -69,19 +91,26 @@ class ReportController {
         for (let i in dataCarts) {
           const package_tripId = dataCarts[i].package_tripId;
           const dataPack = await package_trip.findOne({ where: { id: package_tripId } });
-          const images = await temp_image.findAll({
-            attributes: ["id", "package_tripId", "img"],
-            where: { package_tripId },
-          });
           temp.push({
             ...dataCarts[i].dataValues,
             name: dataPack.name,
             price: dataPack.price,
             rating: dataPack.rating,
-            images,
           });
         }
-        result.push({ ...payments[i].dataValues, users, cart_items: temp });
+        result.push({
+          id: payments[i].id,
+          userId,
+          payment_code,
+          total,
+          status,
+          pym_type,
+          type_bank,
+          trc_time,
+          name_user: users.name,
+          user_email: users.email,
+          cart_items: temp,
+        });
       }
 
       res.status(200).json(result);
