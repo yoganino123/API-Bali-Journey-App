@@ -47,14 +47,23 @@ class UserDetailController {
         }
 
         let is_wishlist = false;
+        let id_wishlist = null;
         const dataWishlists = await wishlist.findAll({ where: { userId, destinationId: id } });
         dataWishlists.forEach((data) => {
           if (data.destinationId === +id) {
             is_wishlist = true;
+            id_wishlist = data.id;
           }
         });
 
-        let data = { ...dataDestination.dataValues, is_wishlist, images, reviews, userReview };
+        let data = {
+          ...dataDestination.dataValues,
+          is_wishlist,
+          id_wishlist,
+          images,
+          reviews,
+          userReview,
+        };
         res.status(200).json(data);
       } else {
         res.status(404).json({ msg: `Not found` });
@@ -207,14 +216,24 @@ class UserDetailController {
         }
 
         let is_wishlist = false;
+        let id_wishlist = null;
         const dataWishlists = await wishlist.findAll({ where: { userId, package_tripId: id } });
         dataWishlists.forEach((data) => {
           if (data.package_tripId === +id) {
             is_wishlist = true;
+            id_wishlist = data.id;
           }
         });
 
-        let data = { ...dataPackageTrip.dataValues, is_wishlist, images, destinations, reviews, userReview };
+        let data = {
+          ...dataPackageTrip.dataValues,
+          is_wishlist,
+          id_wishlist,
+          images,
+          destinations,
+          reviews,
+          userReview,
+        };
         res.status(200).json(data);
       } else {
         res.status(404).json({ msg: `Not found!` });
