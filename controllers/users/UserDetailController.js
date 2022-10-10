@@ -1,4 +1,4 @@
-const { user, temp_image, destination, package_trip, review, tour_package, category } = require("../../models");
+const { user, temp_image, destination, package_trip, review, wishlist, tour_package, category } = require("../../models");
 
 class UserDetailController {
   // ? destination
@@ -46,7 +46,15 @@ class UserDetailController {
           userReview = {};
         }
 
-        let data = { ...dataDestination.dataValues, images, reviews, userReview };
+        let is_wishlist = false;
+        const dataWishlists = await wishlist.findAll({ where: { userId, destinationId: id } });
+        dataWishlists.forEach((data) => {
+          if (data.destinationId === +id) {
+            is_wishlist = true;
+          }
+        });
+
+        let data = { ...dataDestination.dataValues, is_wishlist, images, reviews, userReview };
         res.status(200).json(data);
       } else {
         res.status(404).json({ msg: `Not found` });
@@ -198,7 +206,15 @@ class UserDetailController {
           userReview = {};
         }
 
-        let data = { ...dataPackageTrip.dataValues, images, destinations, reviews, userReview };
+        let is_wishlist = false;
+        const dataWishlists = await wishlist.findAll({ where: { userId, package_tripId: id } });
+        dataWishlists.forEach((data) => {
+          if (data.package_tripId === +id) {
+            is_wishlist = true;
+          }
+        });
+
+        let data = { ...dataPackageTrip.dataValues, is_wishlist, images, destinations, reviews, userReview };
         res.status(200).json(data);
       } else {
         res.status(404).json({ msg: `Not found!` });
