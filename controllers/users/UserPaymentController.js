@@ -1,10 +1,4 @@
-const {
-  temp_image,
-  package_trip,
-  payment,
-  cart_item,
-  user,
-} = require("../../models");
+const { temp_image, package_trip, payment, cart_item, user } = require("../../models");
 const midtransClient = require("midtrans-client");
 const Op = require("sequelize").Op;
 
@@ -102,10 +96,7 @@ class UserPaymentController {
                   if (newAmount > 8) {
                     res.status(203).json({ msg: "Max member has reach out!" });
                   } else {
-                    await cart_item.update(
-                      { amount: newAmount },
-                      { where: { id: valSameData.id } }
-                    );
+                    await cart_item.update({ amount: newAmount }, { where: { id: valSameData.id } });
                     const result = await cart_item.findOne({
                       where: { id: valSameData.id },
                     });
@@ -121,10 +112,7 @@ class UserPaymentController {
                       let jumlah = price * +dataTotal[i].amount;
                       balance += jumlah;
                     }
-                    await payment.update(
-                      { total: balance },
-                      { where: { id: valPaym.id } }
-                    );
+                    await payment.update({ total: balance }, { where: { id: valPaym.id } });
                     res.status(201).json(result);
                   }
                 } else {
@@ -146,10 +134,7 @@ class UserPaymentController {
                     let jumlah = price * dataTotal[i].amount;
                     balance += jumlah;
                   }
-                  await payment.update(
-                    { total: balance },
-                    { where: { id: valPaym.id } }
-                  );
+                  await payment.update({ total: balance }, { where: { id: valPaym.id } });
                   res.status(201).json(addCart);
                 }
               } else {
@@ -186,10 +171,7 @@ class UserPaymentController {
       const userId = req.user.id;
       const { id } = req.body;
       //tambah validasi payment code : nanti
-      const payment_code = (Math.random() + 1)
-        .toString(36)
-        .substring(2)
-        .toUpperCase();
+      const payment_code = (Math.random() + 1).toString(36).substring(2).toUpperCase();
       const valPaym = await payment.findOne({
         where: { userId, status: "oncart" },
       });
@@ -235,10 +217,7 @@ class UserPaymentController {
               payment_code,
               status: "unpaid",
             });
-            await cart_item.update(
-              { paymentId: newPayment.id },
-              { where: { id } }
-            );
+            await cart_item.update({ paymentId: newPayment.id }, { where: { id } });
             let balance = 0;
             const dataTotal = await cart_item.findAll({
               where: { paymentId: valPaym.id },
@@ -249,10 +228,7 @@ class UserPaymentController {
               let jumlah = price * dataTotal[i].amount;
               balance += jumlah;
             }
-            await payment.update(
-              { total: balance },
-              { where: { id: valPaym.id } }
-            );
+            await payment.update({ total: balance }, { where: { id: valPaym.id } });
             let totalUnpaid = 0;
             const dataTotalUnpaid = await cart_item.findAll({
               where: { paymentId: newPayment.id },
@@ -263,10 +239,7 @@ class UserPaymentController {
               let jumlah = price * dataTotalUnpaid[i].amount;
               totalUnpaid += jumlah;
             }
-            await payment.update(
-              { total: totalUnpaid },
-              { where: { id: newPayment.id } }
-            );
+            await payment.update({ total: totalUnpaid }, { where: { id: newPayment.id } });
             const dataCarts = await cart_item.findAll({
               where: { paymentId: newPayment.id },
             });
@@ -379,9 +352,7 @@ class UserPaymentController {
         where: { id, userId, status: "unpaid" },
       });
       if (result !== 0) {
-        res
-          .status(200)
-          .json({ message: `Payment with id ${id} has been deleted` });
+        res.status(200).json({ message: `Payment with id ${id} has been deleted` });
       } else {
         res.status(404).json({ message: `Payment not found!` });
       }
@@ -411,13 +382,8 @@ class UserPaymentController {
             let jumlah = price * +dataTotal[i].amount;
             balance += jumlah;
           }
-          await payment.update(
-            { total: balance },
-            { where: { id: valPayment.id } }
-          );
-          res
-            .status(200)
-            .json({ message: `Cart item with id ${id} has been deleted!` });
+          await payment.update({ total: balance }, { where: { id: valPayment.id } });
+          res.status(200).json({ message: `Cart item with id ${id} has been deleted!` });
         } else {
           res.status(404).json({ message: `Data invalid!` });
         }
@@ -460,10 +426,7 @@ class UserPaymentController {
             msg: "This package trip already booked by someone, choose another date!",
           });
         } else {
-          const result = await payment.update(
-            { status: "paid" },
-            { where: { id, userId, status: "unpaid" } }
-          );
+          const result = await payment.update({ status: "paid" }, { where: { id, userId, status: "unpaid" } });
           if (result[0] !== 0) {
             res.status(200).json({ message: `Payment successfully!` });
           } else {
@@ -504,13 +467,8 @@ class UserPaymentController {
         const resPayment = await core.charge(payload);
         const status = resPayment.transaction_status;
         const responseMidtrans = JSON.stringify(resPayment);
-        const result = await payment.update(
-          { status, responseMidtrans },
-          { where: { id, userId } }
-        );
-        result[0] === 1
-          ? res.status(200).json(`Payment Updated!`)
-          : res.status(404).json(`Payment not updated!`);
+        const result = await payment.update({ status, responseMidtrans }, { where: { id, userId } });
+        result[0] === 1 ? res.status(200).json(`Payment Updated!`) : res.status(404).json(`Payment not updated!`);
       } else {
         res.status(404).json({ msg: "Data payment is not found!" });
       }
@@ -524,14 +482,9 @@ class UserPaymentController {
       const notif = await core.transaction.notification(req.body);
       const code = notif.order_id;
       let status = "";
-      notif.transaction_status === "settlement"
-        ? (status = "paid")
-        : (status = notif.transaction_status);
+      notif.transaction_status === "settlement" ? (status = "paid") : (status = notif.transaction_status);
       const responseMidtrans = JSON.stringify(notif);
-      await payment.update(
-        { status, responseMidtrans },
-        { where: { payment_code: code } }
-      );
+      await payment.update({ status, responseMidtrans }, { where: { payment_code: code } });
 
       res.status(200).json(result);
     } catch (error) {
@@ -545,19 +498,14 @@ class UserPaymentController {
       const userId = +req.user.id;
       const result = await core.transaction.status(code);
       let status = "";
-      result.transaction_status === "settlement"
-        ? (status = "paid")
-        : (status = result.transaction_status);
+      result.transaction_status === "settlement" ? (status = "paid") : (status = result.transaction_status);
       const responseMidtrans = JSON.stringify(result);
-      await payment.update(
-        { status, responseMidtrans },
-        { where: { payment_code: code, userId } }
-      );
+      await payment.update({ status, responseMidtrans }, { where: { payment_code: code, userId } });
 
       if (status === "paid") {
         res.status(200).json(result);
       } else {
-        res.status(200).json({ msg: "Please complete your transaction." });
+        res.status(400).json({ msg: "Please complete your transaction." });
       }
     } catch (error) {
       res.status(500).json(error);

@@ -50,6 +50,7 @@ class ReportController {
           cart_items: temp,
         });
       }
+      result = result.sort((a, b) => new Date(b.transaction_time) - new Date(a.transaction_time));
 
       res.status(200).json(result);
     } catch (err) {
@@ -114,6 +115,7 @@ class ReportController {
           cart_items: temp,
         });
       }
+      result = result.sort((a, b) => new Date(b.trc_time) - new Date(a.trc_time));
 
       res.status(200).json(result);
     } catch (err) {
