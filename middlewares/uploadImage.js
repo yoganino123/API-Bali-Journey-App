@@ -13,13 +13,18 @@ const fileFilter = (req, file, cb) => {
     file.mimetype === "image/jpeg" ||
     file.mimetype === "image/png" ||
     file.mimetype === "image/jpg" ||
-    file.mimetype === "image/gif"
+    file.mimetype === "image/gif" ||
+    file.mimetype === "image/.jpeg" ||
+    file.mimetype === "image/.png" ||
+    file.mimetype === "image/.jpg" ||
+    file.mimetype === "image/.gif"
   ) {
     cb(null, true);
   } else {
     cb(null, false);
     console.log("Invalid file type.");
   }
+  console.log(file.mimetype)
 };
 const upload = multer({
   storage: fileStorageEngine,
