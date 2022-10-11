@@ -20,13 +20,18 @@ class UserDetailController {
         });
         const revDes = await review.findAll({
           attributes: { exclude: ["createdAt", "updatedAt", "package_tripId"] },
-          include: [user],
           where: { destinationId: dataDestination.id },
         });
         for (let i in revDes) {
           let reviewId = revDes[i].id;
+          let dataUser = await user.findOne({
+            attributes: ["id", "name", "email"],
+            where: { id: revDes[i].userId },
+          });
+          let userImages = await temp_image.findOne({ attributes: ["id", "userId", "img"], where: { userId } });
+          let users = { ...dataUser.dataValues, images: userImages.img };
           let images = await temp_image.findAll({ attributes: ["id", "reviewId", "img"], where: { reviewId } });
-          let data = { ...revDes[i].dataValues, images };
+          let data = { ...revDes[i].dataValues, user: users, images };
           reviews.push(data);
         }
 
@@ -37,11 +42,17 @@ class UserDetailController {
         });
         if (userRevDes) {
           let userReviewId = userRevDes.id;
+          let dataUser = await user.findOne({
+            attributes: ["id", "name", "email"],
+            where: { id: userRevDes.userId },
+          });
+          let userImages = await temp_image.findOne({ attributes: ["id", "userId", "img"], where: { userId } });
+          let users = { ...dataUser.dataValues, images: userImages.img };
           let userRevImages = await temp_image.findAll({
             attributes: ["id", "reviewId", "img"],
             where: { reviewId: userReviewId },
           });
-          userReview = { ...userRevDes.dataValues, images: userRevImages };
+          userReview = { ...userRevDes.dataValues, user: users, images: userRevImages };
         } else {
           userReview = {};
         }
@@ -188,29 +199,39 @@ class UserDetailController {
         let reviews = [];
         const revPack = await review.findAll({
           attributes: { exclude: ["createdAt", "updatedAt", "destinationId"] },
-          include: [user],
           where: { package_tripId: dataPackageTrip.id },
         });
         for (let i in revPack) {
           let reviewId = revPack[i].id;
+          let dataUser = await user.findOne({
+            attributes: ["id", "name", "email"],
+            where: { id: revPack[i].userId },
+          });
+          let userImages = await temp_image.findOne({ attributes: ["id", "userId", "img"], where: { userId } });
+          let users = { ...dataUser.dataValues, images: userImages.img };
           let images = await temp_image.findAll({ attributes: ["id", "reviewId", "img"], where: { reviewId } });
-          let data = { ...revPack[i].dataValues, images };
+          let data = { ...revPack[i].dataValues, user: users, images };
           reviews.push(data);
         }
 
         const userRevPack = await review.findOne({
           attributes: { exclude: ["createdAt", "updatedAt", "destinationId"] },
-          include: [user],
           where: { package_tripId: dataPackageTrip.id, userId },
         });
         let userReview;
         if (userRevPack) {
           let userReviewId = userRevPack.id;
+          let dataUser = await user.findOne({
+            attributes: ["id", "name", "email"],
+            where: { id: userRevPack.userId },
+          });
+          let userImages = await temp_image.findOne({ attributes: ["id", "userId", "img"], where: { userId } });
+          let users = { ...dataUser.dataValues, images: userImages.img };
           let userReviewImages = await temp_image.findAll({
             attributes: ["id", "reviewId", "img"],
             where: { reviewId: userReviewId },
           });
-          userReview = { ...userRevPack.dataValues, images: userReviewImages };
+          userReview = { ...userRevPack.dataValues, user: users, images: userReviewImages };
         } else {
           userReview = {};
         }
