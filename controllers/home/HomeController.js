@@ -155,13 +155,18 @@ class HomeController {
         let reviews = [];
         const revDes = await review.findAll({
           attributes: { exclude: ["createdAt", "updatedAt", "package_tripId"] },
-          include: [user],
           where: { destinationId: dataDestination.id },
         });
         for (let i in revDes) {
           let reviewId = revDes[i].id;
+          let dataUser = await user.findOne({
+            attributes: ["id", "name", "email"],
+            where: { id: revDes[i].userId },
+          });
+          let userImages = await temp_image.findOne({ attributes: ["id", "userId", "img"], where: { userId: dataUser.id } });
+          let users = { ...dataUser.dataValues, images: userImages.img };
           let images = await temp_image.findAll({ attributes: ["id", "reviewId", "img"], where: { reviewId } });
-          let data = { ...revDes[i].dataValues, images };
+          let data = { ...revDes[i].dataValues, user: users, images };
           reviews.push(data);
         }
         let data = { ...dataDestination.dataValues, images, reviews };
@@ -202,13 +207,18 @@ class HomeController {
         let reviews = [];
         const revPack = await review.findAll({
           attributes: { exclude: ["createdAt", "updatedAt", "destinationId"] },
-          include: [user],
           where: { package_tripId: dataPackageTrip.id },
         });
         for (let i in revPack) {
           let reviewId = revPack[i].id;
+          let dataUser = await user.findOne({
+            attributes: ["id", "name", "email"],
+            where: { id: revPack[i].userId },
+          });
+          let userImages = await temp_image.findOne({ attributes: ["id", "userId", "img"], where: { userId: dataUser.id } });
+          let users = { ...dataUser.dataValues, images: userImages.img };
           let images = await temp_image.findAll({ attributes: ["id", "reviewId", "img"], where: { reviewId } });
-          let data = { ...revPack[i].dataValues, images };
+          let data = { ...revPack[i].dataValues, user: users, images };
           reviews.push(data);
         }
         let data = { ...dataPackageTrip.dataValues, images, destinations, reviews };
