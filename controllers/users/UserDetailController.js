@@ -28,7 +28,10 @@ class UserDetailController {
             attributes: ["id", "name", "email"],
             where: { id: revDes[i].userId },
           });
-          let userImages = await temp_image.findOne({ attributes: ["id", "userId", "img"], where: { userId } });
+          let userImages = await temp_image.findOne({
+            attributes: ["id", "userId", "img"],
+            where: { userId: revDes[i].userId },
+          });
           let users = { ...dataUser.dataValues, images: userImages.img };
           let images = await temp_image.findAll({ attributes: ["id", "reviewId", "img"], where: { reviewId } });
           let data = { ...revDes[i].dataValues, user: users, images };
